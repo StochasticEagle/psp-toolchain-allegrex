@@ -27,15 +27,15 @@ PROC_NR=$(getconf _NPROCESSORS_ONLN)
 ## If using MacOS Apple, set gmp, mpfr and mpc paths using TARG_XTRA_OPTS
 ## (this is needed for Apple Silicon but we will do it for all MacOS systems)
 if [ "$(uname -s)" = "Darwin" ]; then
-  ## Check if using brew
-  if command -v brew &> /dev/null; then
-    TARG_XTRA_OPTS="--with-gmp=$(brew --prefix gmp) --with-mpfr=$(brew --prefix mpfr) --with-mpc=$(brew --prefix libmpc) --with-system-zlib"
-  fi
+    ## Check if using brew
+    if command -v brew &> /dev/null; then
+        TARG_XTRA_OPTS="--with-gmp=$(brew --prefix gmp) --with-mpfr=$(brew --prefix mpfr) --with-mpc=$(brew --prefix libmpc) --with-system-zlib"
+    fi
 
-  ## Check if using MacPorts
-  if command -v port &> /dev/null; then
-    TARG_XTRA_OPTS="--with-gmp=$(port -q prefix gmp) --with-mpfr=$(port -q prefix mpfr) --with-mpc=$(port -q prefix libmpc) --with-system-zlib"
-  fi
+    ## Check if using MacPorts
+    if command -v port &> /dev/null; then
+        TARG_XTRA_OPTS="--with-gmp=$(port -q prefix gmp) --with-mpfr=$(port -q prefix mpfr) --with-mpc=$(port -q prefix libmpc) --with-system-zlib"
+    fi
 fi
 
 ## Create and enter the stage 1 build directory.
@@ -43,23 +43,25 @@ mkdir -p "${BUILD}"
 cd "${BUILD}"
 
 ## Configure the bootstrap compiler.
-"${SOURCE}/configure" \
-  --quiet \
-  --prefix="$PSPDEV" \
-  --target="$TARGET" \
-  --enable-languages="c" \
-  --with-float=hard \
-  --with-headers=no \
-  --without-newlib \
-  --disable-libgcc \
-  --disable-shared \
-  --disable-threads \
-  --disable-libssp \
-  --disable-libgomp \
-  --disable-libmudflap \
-  --disable-libquadmath \
-  --disable-nls \
-  $TARG_XTRA_OPTS
+if [ ! -f "${BUILD}/Makefile" ]; then
+    "${SOURCE}/configure" \
+    --quiet \
+    --prefix="$PSPDEV" \
+    --target="$TARGET" \
+    --enable-languages="c" \
+    --with-float=hard \
+    --with-headers=no \
+    --without-newlib \
+    --disable-libgcc \
+    --disable-shared \
+    --disable-threads \
+    --disable-libssp \
+    --disable-libgomp \
+    --disable-libmudflap \
+    --disable-libquadmath \
+    --disable-nls \
+    $TARG_XTRA_OPTS
+fi
 
 ## Compile and install the bootstrap compiler.
 make --quiet -j "$PROC_NR" all-gcc

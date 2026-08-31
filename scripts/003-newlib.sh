@@ -29,7 +29,8 @@ mkdir -p "${BUILD}"
 cd "${BUILD}"
 
 ## Configure the build.
-"${SOURCE}/configure" \
+if [ ! -f "${BUILD}/Makefile" ]; then
+    "${SOURCE}/configure" \
     --prefix="$PSPDEV" \
     --target="$TARGET" \
     --with-sysroot="$PSPDEV/$TARGET" \
@@ -39,6 +40,7 @@ cd "${BUILD}"
     --enable-newlib-iconv \
     --enable-newlib-iconv-encodings=us_ascii,utf8,utf16,utf_16be,utf_16le,ucs_2,ucs_2be,ucs_2le,ucs_2_internal,ucs_4_internal,iso_8859_1 \
     $TARG_XTRA_OPTS
+fi
 
 ## Compile and install.
 make --quiet -j "$PROC_NR" all
@@ -51,7 +53,7 @@ cp "${SOURCE}/COPYING.NEWLIB" "${PSPDEV}/psp/share/licenses/newlib/"
 ## Store build information.
 BUILD_FILE="${PSPDEV}/build.txt"
 if [[ -f "${BUILD_FILE}" ]]; then
-  sed -i'' '/^newlib /d' "${BUILD_FILE}"
+    sed -i'' '/^newlib /d' "${BUILD_FILE}"
 fi
 
 git -C "${SOURCE}" log -1 --format="newlib %H %cs %s" >> "${BUILD_FILE}"

@@ -4,7 +4,7 @@
 ## Exit with code 1 when any command executed returns a non-zero exit code.
 onerr()
 {
-  exit 1;
+    exit 1;
 }
 trap onerr ERR
 
