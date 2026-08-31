@@ -8,29 +8,15 @@ onerr()
 }
 trap onerr ERR
 
-## Read information from the configuration file.
-source "$(dirname "$0")/../config/psptoolchain-allegrex-config.sh"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+SOURCE="${ROOT}/components/binutils-gdb"
+BUILD="${ROOT}/build/binutils"
 
-## Download the source code.
-REPO_URL="$PSPTOOLCHAIN_ALLEGREX_BINUTILS_REPO_URL"
-REPO_REF="$PSPTOOLCHAIN_ALLEGREX_BINUTILS_DEFAULT_REPO_REF"
-REPO_FOLDER="$(s="$REPO_URL"; s=${s##*/}; printf "%s" "${s%.*}")"
-
-# Checking if a specific Git reference has been passed in parameter $1
-if test -n "$1"; then
-  REPO_REF="$1"
-  printf 'Using specified repo reference %s\n' "$REPO_REF"
+if [ ! -f "${SOURCE}/configure" ]; then
+    echo "ERROR: binutils-gdb submodule is not initialized."
+    echo "Run: git submodule update --init --recursive --depth=1"
+    exit 1
 fi
-
-if test ! -d "$REPO_FOLDER"; then
-  git clone --depth 1 -b "$REPO_REF" "$REPO_URL" "$REPO_FOLDER"
-else
-  git -C "$REPO_FOLDER" fetch origin
-  git -C "$REPO_FOLDER" reset --hard "origin/$REPO_REF"
-  git -C "$REPO_FOLDER" checkout "$REPO_REF"
-fi
-
-cd "$REPO_FOLDER"
 
 TARGET="psp"
 TARG_XTRA_OPTS=""
@@ -52,33 +38,33 @@ fi
 PROC_NR=$(getconf _NPROCESSORS_ONLN)
 
 ## Create and enter the toolchain/build directory
-rm -rf build-$TARGET && mkdir build-$TARGET && cd build-$TARGET
+mkdir -p "${BUILD}"
+cd "${BUILD}"
 
 ## Build GDB without python support by default
 ## Set the environment variable WITH_PYTHON to auto to change this
 WITH_PYTHON="${WITH_PYTHON:-no}"
 
 ## Configure the build.
-../configure \
-  --quiet \
-  --prefix="$PSPDEV" \
-  --target="$TARGET" \
-  --with-sysroot="$PSPDEV/$TARGET" \
-  --enable-plugins \
-  --disable-initfini-array \
-  --with-python="$WITH_PYTHON" \
-  --disable-werror \
-  $TARG_XTRA_OPTS
+"${SOURCE}/configure" \
+    --quiet \
+    --prefix="$PSPDEV" \
+    --target="$TARGET" \
+    --with-sysroot="$PSPDEV/$TARGET" \
+    --enable-plugins \
+    --disable-initfini-array \
+    --with-python="$WITH_PYTHON" \
+    --disable-werror \
+    $TARG_XTRA_OPTS
 
 ## Compile and install.
-make --quiet -j $PROC_NR clean
-make --quiet -j $PROC_NR all
-make --quiet -j $PROC_NR install-strip
-make --quiet -j $PROC_NR clean
+make --quiet -j "$PROC_NR" all
+make --quiet -j "$PROC_NR" install-strip
 
 ## Store build information
 BUILD_FILE="${PSPDEV}/build.txt"
 if [[ -f "${BUILD_FILE}" ]]; then
   sed -i'' '/^binutils /d' "${BUILD_FILE}"
 fi
-git log -1 --format="binutils %H %cs %s" >> "${BUILD_FILE}"
+
+git -C "${SOURCE}" log -1 --format="binutils %H %cs %s" >> "${BUILD_FILE}"

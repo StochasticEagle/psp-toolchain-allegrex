@@ -8,17 +8,17 @@ This program will automatically build and install a compiler and other tools use
 
 ## **ATENTION!**
 
-If you're trying to install in your machine the **WHOLE PSP Development Environment** this is **NOT** the repo to use, you should use instead the [pspdev](https://github.com/pspdev/pspdev "pspdev") repo.
+If you're trying to install in your machine the **WHOLE PSP Development Environment** this is **NOT** the repo to use, you should use instead the [pspdev](https://github.com/StochasticEagle/pspdev "pspdev") repo.
 
 ## What these scripts do
 
 These scripts download (`git clone`) and install:
 
--   [binutils](https://github.com/pspdev/binutils-gdb "binutils")
--   [gdb](https://github.com/pspdev/binutils-gdb "gdb")
--   [gcc](https://github.com/pspdev/gcc "gcc")
--   [newlib](https://github.com/pspdev/newlib "newlib")
--   [pthread-embedded](https://github.com/pspdev/pthread-embedded "pthread-embedded")
+-   [binutils](https://github.com/StochasticEagle/psp-binutils-gdb "psp-binutils")
+-   [gdb](https://github.com/StochasticEagle/psp-binutils-gdb "psp-gdb")
+-   [gcc](https://github.com/StochasticEagle/psp-gcc "psp-gcc")
+-   [newlib](https://github.com/StochasticEagle/psp-newlib "psp-newlib")
+-   [pthread](https://github.com/StochasticEagle/psp-pthread "psp-pthread")
 
 ## Requirements
 

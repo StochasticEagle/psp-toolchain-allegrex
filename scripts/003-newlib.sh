@@ -8,63 +8,50 @@ onerr()
 }
 trap onerr ERR
 
-## Read information from the configuration file.
-source "$(dirname "$0")/../config/psptoolchain-allegrex-config.sh"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+SOURCE="${ROOT}/components/newlib"
+BUILD="${ROOT}/build/newlib"
 
-## Download the source code.
-REPO_URL="$PSPTOOLCHAIN_ALLEGREX_NEWLIB_REPO_URL"
-REPO_REF="$PSPTOOLCHAIN_ALLEGREX_NEWLIB_DEFAULT_REPO_REF"
-REPO_FOLDER="$(s="$REPO_URL"; s=${s##*/}; printf "%s" "${s%.*}")"
-
-# Checking if a specific Git reference has been passed in parameter $1
-if test -n "$1"; then
-  REPO_REF="$1"
-  printf 'Using specified repo reference %s\n' "$REPO_REF"
+if [ ! -f "${SOURCE}/configure" ]; then
+    echo "ERROR: newlib submodule is not initialized."
+    echo "Run: git submodule update --init --recursive --depth=1"
+    exit 1
 fi
-
-if test ! -d "$REPO_FOLDER"; then
-  git clone --depth 1 -b "$REPO_REF" "$REPO_URL" "$REPO_FOLDER"
-else
-  git -C "$REPO_FOLDER" fetch origin
-  git -C "$REPO_FOLDER" reset --hard "origin/$REPO_REF"
-  git -C "$REPO_FOLDER" checkout "$REPO_REF"
-fi
-
-cd "$REPO_FOLDER"
 
 TARGET="psp"
+TARG_XTRA_OPTS="${TARG_XTRA_OPTS:-}"
 
 ## Determine the maximum number of processes that Make can work with.
 PROC_NR=$(getconf _NPROCESSORS_ONLN)
 
-# Create and enter the toolchain/build directory
-rm -rf build-$TARGET && mkdir build-$TARGET && cd build-$TARGET
+## Create and enter the toolchain/build directory
+mkdir -p "${BUILD}"
+cd "${BUILD}"
 
-# Configure the build.
-../configure \
-	--prefix="$PSPDEV" \
-	--target="$TARGET" \
-	--with-sysroot="$PSPDEV/$TARGET" \
-	--enable-newlib-retargetable-locking \
-	--enable-newlib-multithread \
-	--enable-newlib-io-c99-formats \
- 	--enable-newlib-iconv \
-  	--enable-newlib-iconv-encodings=us_ascii,utf8,utf16,utf_16be,utf_16le,ucs_2,ucs_2be,ucs_2le,ucs_2_internal,ucs_4_internal,iso_8859_1 \
-	$TARG_XTRA_OPTS
+## Configure the build.
+"${SOURCE}/configure" \
+    --prefix="$PSPDEV" \
+    --target="$TARGET" \
+    --with-sysroot="$PSPDEV/$TARGET" \
+    --enable-newlib-retargetable-locking \
+    --enable-newlib-multithread \
+    --enable-newlib-io-c99-formats \
+    --enable-newlib-iconv \
+    --enable-newlib-iconv-encodings=us_ascii,utf8,utf16,utf_16be,utf_16le,ucs_2,ucs_2be,ucs_2le,ucs_2_internal,ucs_4_internal,iso_8859_1 \
+    $TARG_XTRA_OPTS
 
 ## Compile and install.
-make --quiet -j $PROC_NR clean
-make --quiet -j $PROC_NR all
-make --quiet -j $PROC_NR install-strip
-make --quiet -j $PROC_NR clean
+make --quiet -j "$PROC_NR" all
+make --quiet -j "$PROC_NR" install-strip
 
-# Copy license file
-mkdir -p $PSPDEV/psp/share/licenses/newlib
-cp ../COPYING.NEWLIB $PSPDEV/psp/share/licenses/newlib/
+## Copy license file.
+mkdir -p "${PSPDEV}/psp/share/licenses/newlib"
+cp "${SOURCE}/COPYING.NEWLIB" "${PSPDEV}/psp/share/licenses/newlib/"
 
-## Store build information
+## Store build information.
 BUILD_FILE="${PSPDEV}/build.txt"
 if [[ -f "${BUILD_FILE}" ]]; then
   sed -i'' '/^newlib /d' "${BUILD_FILE}"
 fi
-git log -1 --format="newlib %H %cs %s" >> "${BUILD_FILE}"
+
+git -C "${SOURCE}" log -1 --format="newlib %H %cs %s" >> "${BUILD_FILE}"
