@@ -1,0 +1,20 @@
+[submodule "components/gcc"]
+	path = components/gcc
+	url = https://github.com/StochasticEagle/psp-gcc.git
+	branch = master
+	shallow = true
+[submodule "components/newlib"]
+	path = components/newlib
+	url = https://github.com/StochasticEagle/psp-newlib.git
+	branch = master
+	shallow = true
+[submodule "components/pthread"]
+	path = components/pthread
+	url = https://github.com/StochasticEagle/psp-pthread.git
+	branch = master
+	shallow = true
+[submodule "components/binutils-gdb"]
+	shallow = true
+	path = components/binutils-gdb
+	url = https://github.com/StochasticEagle/psp-binutils-gdb.git
+	branch = master
