@@ -63,6 +63,25 @@ cd "${BUILD}"
 make --quiet -j "$PROC_NR" all
 make --quiet -j "$PROC_NR" install-strip
 
+## The final PSP compiler must reach newlib's stdint.h before inttypes.h
+## selects its 64-bit PRI*/SCN* macros. Catch a stale stage-1 GCC stdint.h or
+## future header-order regression immediately instead of during package builds.
+cat <<'EOF' | "$PSPDEV/bin/psp-gcc" -x c -c -o /dev/null -
+#include <inttypes.h>
+#ifndef PRIi64
+#error "PSP GCC/newlib integration is missing PRIi64"
+#endif
+#ifndef PRIx64
+#error "PSP GCC/newlib integration is missing PRIx64"
+#endif
+#ifndef PRIu64
+#error "PSP GCC/newlib integration is missing PRIu64"
+#endif
+static const char *const psp_prii64 = "%" PRIi64;
+static const char *const psp_prix64 = "%" PRIx64;
+static const char *const psp_priu64 = "%" PRIu64;
+EOF
+
 ## Store build information.
 BUILD_FILE="${PSPDEV}/build.txt"
 if [[ -f "${BUILD_FILE}" ]]; then
