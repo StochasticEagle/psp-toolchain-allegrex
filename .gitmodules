@@ -17,4 +17,4 @@
 	shallow = true
 	path = components/binutils-gdb
 	url = https://github.com/StochasticEagle/psp-binutils-gdb.git
-	branch = allegrex-v2.44
+	branch = dev/fork
