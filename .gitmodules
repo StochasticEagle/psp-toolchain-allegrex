@@ -11,7 +11,7 @@
 [submodule "components/pthread"]
 	path = components/pthread
 	url = https://github.com/StochasticEagle/psp-pthread.git
-	branch = master
+	branch = platform_agnostic
 	shallow = true
 [submodule "components/binutils-gdb"]
 	shallow = true
