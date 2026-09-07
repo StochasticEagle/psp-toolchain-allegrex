@@ -1,7 +1,7 @@
 [submodule "components/gcc"]
 	path = components/gcc
 	url = https://github.com/StochasticEagle/psp-gcc.git
-	branch = master
+	branch = allegrex-v15.2.0
 	shallow = true
 [submodule "components/newlib"]
 	path = components/newlib
@@ -17,4 +17,4 @@
 	shallow = true
 	path = components/binutils-gdb
 	url = https://github.com/StochasticEagle/psp-binutils-gdb.git
-	branch = master
+	branch = allegrex-v2.44
