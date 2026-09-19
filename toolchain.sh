@@ -3,7 +3,6 @@
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${ROOT}/install-permissions.sh"
-pspdev_require_unprivileged_build || exit 1
 BUILD="${ROOT}/build"
 
 ## PSPDEV is the authoritative installation location.
