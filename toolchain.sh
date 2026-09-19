@@ -2,6 +2,8 @@
 # toolchain.sh by fjtrujy
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${ROOT}/install-permissions.sh"
+pspdev_require_unprivileged_build || exit 1
 BUILD="${ROOT}/build"
 
 ## PSPDEV is the authoritative installation location.
@@ -75,10 +77,6 @@ else
 fi
 
 ## Store build information.
-BUILD_FILE="${PSPDEV}/build.txt"
-
-if [[ -f "${BUILD_FILE}" ]]; then
-  sed -i'' '/^psp-toolchain-allegrex /d' "${BUILD_FILE}"
-fi
-
-git -C "${ROOT}" log -1 --format="psp-toolchain-allegrex %H %cs %s" >> "${BUILD_FILE}"
+pspdev_record_build_info \
+  "psp-toolchain-allegrex" \
+  "$(git -C "${ROOT}" log -1 --format="psp-toolchain-allegrex %H %cs %s")"

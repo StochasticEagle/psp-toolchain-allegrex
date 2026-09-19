@@ -9,6 +9,8 @@ onerr()
 trap onerr ERR
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "${ROOT}/install-permissions.sh"
+pspdev_require_unprivileged_build || exit 1
 SOURCE="${ROOT}/components/newlib"
 BUILD="${ROOT}/build/newlib"
 
@@ -42,16 +44,11 @@ cd "${BUILD}"
 
 ## Compile and install.
 make --quiet -j "$PROC_NR" all
-make --quiet -j "$PROC_NR" install-strip
+pspdev_run_install make --quiet -j "$PROC_NR" install-strip
 
 ## Copy license file.
-mkdir -p "${PSPDEV}/psp/share/licenses/newlib"
-cp "${SOURCE}/COPYING.NEWLIB" "${PSPDEV}/psp/share/licenses/newlib/"
+pspdev_run_install mkdir -p "${PSPDEV}/psp/share/licenses/newlib"
+pspdev_run_install cp "${SOURCE}/COPYING.NEWLIB" "${PSPDEV}/psp/share/licenses/newlib/"
 
 ## Store build information.
-BUILD_FILE="${PSPDEV}/build.txt"
-if [[ -f "${BUILD_FILE}" ]]; then
-  sed -i'' '/^newlib /d' "${BUILD_FILE}"
-fi
-
-git -C "${SOURCE}" log -1 --format="newlib %H %cs %s" >> "${BUILD_FILE}"
+pspdev_record_build_info "newlib" "$(git -C "${SOURCE}" log -1 --format="newlib %H %cs %s")"

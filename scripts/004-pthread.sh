@@ -9,6 +9,8 @@ onerr()
 trap onerr ERR
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "${ROOT}/install-permissions.sh"
+pspdev_require_unprivileged_build || exit 1
 SOURCE="${ROOT}/components/pthread"
 
 if [ ! -f "${SOURCE}/platform/psp/Makefile" ]; then
@@ -24,18 +26,13 @@ cd "${SOURCE}/platform/psp"
 
 ## Compile and install.
 make --quiet -j "$PROC_NR" all
-make --quiet -j "$PROC_NR" install
+pspdev_run_install make --quiet -j "$PROC_NR" install
 
 ## Copy license files.
-mkdir -p "${PSPDEV}/psp/share/licenses/pthread-embedded"
-cp "${SOURCE}"/COPYING.* \
+pspdev_run_install mkdir -p "${PSPDEV}/psp/share/licenses/pthread-embedded"
+pspdev_run_install cp "${SOURCE}"/COPYING.* \
    "${SOURCE}/README.md" \
    "${PSPDEV}/psp/share/licenses/pthread-embedded/"
 
 ## Store build information.
-BUILD_FILE="${PSPDEV}/build.txt"
-if [[ -f "${BUILD_FILE}" ]]; then
-  sed -i'' '/^pthread-embedded /d' "${BUILD_FILE}"
-fi
-
-git -C "${SOURCE}" log -1 --format="pthread-embedded %H %cs %s" >> "${BUILD_FILE}"
+pspdev_record_build_info "pthread-embedded" "$(git -C "${SOURCE}" log -1 --format="pthread-embedded %H %cs %s")"

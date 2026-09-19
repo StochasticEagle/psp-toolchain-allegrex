@@ -9,6 +9,8 @@ onerr()
 trap onerr ERR
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "${ROOT}/install-permissions.sh"
+pspdev_require_unprivileged_build || exit 1
 SOURCE="${ROOT}/components/gcc"
 BUILD="${ROOT}/build/gcc-stage2"
 
@@ -61,7 +63,7 @@ cd "${BUILD}"
 
 ## Compile and install the final compiler.
 make --quiet -j "$PROC_NR" all
-make --quiet -j "$PROC_NR" install-strip
+pspdev_run_install make --quiet -j "$PROC_NR" install-strip
 
 ## The final PSP compiler must reach newlib's stdint.h before inttypes.h
 ## selects its 64-bit PRI*/SCN* macros. Catch a stale stage-1 GCC stdint.h or
@@ -83,9 +85,4 @@ static const char *const psp_priu64 = "%" PRIu64;
 EOF
 
 ## Store build information.
-BUILD_FILE="${PSPDEV}/build.txt"
-if [[ -f "${BUILD_FILE}" ]]; then
-  sed -i'' '/^gcc /d' "${BUILD_FILE}"
-fi
-
-git -C "${SOURCE}" log -1 --format="gcc %H %cs %s" >> "${BUILD_FILE}"
+pspdev_record_build_info "gcc" "$(git -C "${SOURCE}" log -1 --format="gcc %H %cs %s")"

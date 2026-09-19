@@ -9,6 +9,8 @@ onerr()
 trap onerr ERR
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "${ROOT}/install-permissions.sh"
+pspdev_require_unprivileged_build || exit 1
 SOURCE="${ROOT}/components/binutils-gdb"
 BUILD="${ROOT}/build/binutils"
 
@@ -59,12 +61,7 @@ WITH_PYTHON="${WITH_PYTHON:-no}"
 
 ## Compile and install.
 make --quiet -j "$PROC_NR" all
-make --quiet -j "$PROC_NR" install-strip
+pspdev_run_install make --quiet -j "$PROC_NR" install-strip
 
 ## Store build information
-BUILD_FILE="${PSPDEV}/build.txt"
-if [[ -f "${BUILD_FILE}" ]]; then
-  sed -i'' '/^binutils /d' "${BUILD_FILE}"
-fi
-
-git -C "${SOURCE}" log -1 --format="binutils %H %cs %s" >> "${BUILD_FILE}"
+pspdev_record_build_info "binutils" "$(git -C "${SOURCE}" log -1 --format="binutils %H %cs %s")"
