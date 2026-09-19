@@ -10,7 +10,6 @@ if [[ -z "${PSPDEV:-}" ]]; then
   echo "ERROR: PSPDEV environment variable is not set."
   exit 1
 fi
-pspdev
 ## Make sure this toolchain's binaries take precedence during later stages.
 export PATH="${PSPDEV}/bin:${PATH}"
 

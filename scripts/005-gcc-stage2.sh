@@ -10,7 +10,6 @@ trap onerr ERR
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source "${ROOT}/install-permissions.sh"
-pspdev_require_unprivileged_build || exit 1
 SOURCE="${ROOT}/components/gcc"
 BUILD="${ROOT}/build/gcc-stage2"
 
