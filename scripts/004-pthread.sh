@@ -28,9 +28,9 @@ PROC_NR=$(getconf _NPROCESSORS_ONLN)
 rm -rf "${BUILD}"
 cmake -S "${SOURCE}" -B "${BUILD}" \
   -DCMAKE_SYSTEM_NAME=Generic \
-  -DCMAKE_C_COMPILER=psp-gcc \
-  -DCMAKE_AR=psp-ar \
-  -DCMAKE_RANLIB=psp-ranlib \
+  -DCMAKE_C_COMPILER="${PSPDEV}/bin/psp-gcc" \
+  -DCMAKE_AR="${PSPDEV}/bin/psp-ar" \
+  -DCMAKE_RANLIB="${PSPDEV}/bin/psp-ranlib" \
   -DCMAKE_TRY_COMPILE_TARGET_TYPE=STATIC_LIBRARY \
   -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_INSTALL_PREFIX="${PSPDEV}/psp" \
