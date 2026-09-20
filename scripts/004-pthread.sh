@@ -11,21 +11,33 @@ trap onerr ERR
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source "${ROOT}/install-permissions.sh"
 SOURCE="${ROOT}/components/pthread"
+BUILD="${ROOT}/build/pthread"
 
-if [ ! -f "${SOURCE}/platform/psp/Makefile" ]; then
+if [ ! -f "${SOURCE}/CMakeLists.txt" ]; then
     echo "ERROR: pthread submodule is not initialized."
     echo "Run: git submodule update --init --recursive --depth=1"
     exit 1
 fi
 
-## Determine the maximum number of processes that Make can work with.
+## Determine the maximum number of processes that CMake can work with.
 PROC_NR=$(getconf _NPROCESSORS_ONLN)
 
-cd "${SOURCE}/platform/psp"
+## pthread is part of the compiler bootstrap and is built before PSPSDK exists,
+## so it cannot use PSPSDK's pspdev.cmake toolchain file here. Configure a
+## minimal cross build directly against the stage-1 PSP compiler instead.
+rm -rf "${BUILD}"
+cmake -S "${SOURCE}" -B "${BUILD}" \
+  -DCMAKE_SYSTEM_NAME=Generic \
+  -DCMAKE_C_COMPILER=psp-gcc \
+  -DCMAKE_AR=psp-ar \
+  -DCMAKE_RANLIB=psp-ranlib \
+  -DCMAKE_TRY_COMPILE_TARGET_TYPE=STATIC_LIBRARY \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_INSTALL_PREFIX="${PSPDEV}/psp" \
+  -DPSP_PTHREAD_BUILD_TESTS=OFF
 
-## Compile and install.
-make --quiet -j "$PROC_NR" all
-pspdev_run_install make --quiet -j "$PROC_NR" install
+cmake --build "${BUILD}" --parallel "${PROC_NR}"
+pspdev_run_install cmake --install "${BUILD}"
 
 ## Copy license files.
 pspdev_run_install mkdir -p "${PSPDEV}/psp/share/licenses/pthread-embedded"
