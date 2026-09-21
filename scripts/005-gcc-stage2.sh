@@ -84,6 +84,17 @@ static const char *const psp_prix64 = "%" PRIx64;
 static const char *const psp_priu64 = "%" PRIu64;
 EOF
 
+## The C++ driver must preserve libstdc++ -> newlib include ordering so
+## wrappers such as <cstdlib> can reach the underlying C headers via
+## #include_next.
+cat <<'EOF' | "${PSPDEV}/bin/psp-g++" -x c++ -c -o /dev/null -
+#include <cstdlib>
+static int psp_cstdlib_probe(void)
+{
+    return std::abs(-1);
+}
+EOF
+
 ## Verify libc exports functions GCC may synthesize from common string idioms.
 LIBC_ARCHIVE="${PSPDEV}/psp/lib/libc.a"
 if [ ! -f "${LIBC_ARCHIVE}" ]; then
