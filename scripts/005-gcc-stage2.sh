@@ -84,5 +84,17 @@ static const char *const psp_prix64 = "%" PRIx64;
 static const char *const psp_priu64 = "%" PRIu64;
 EOF
 
+## Verify libc exports functions GCC may synthesize from common string idioms.
+LIBC_ARCHIVE="${PSPDEV}/psp/lib/libc.a"
+if [ ! -f "${LIBC_ARCHIVE}" ]; then
+    echo "ERROR: PSP libc archive is missing: ${LIBC_ARCHIVE}" >&2
+    exit 1
+fi
+if ! "${PSPDEV}/bin/psp-nm" -g --defined-only "${LIBC_ARCHIVE}" | grep -Eq ' [Tt] stpcpy
+; then
+    echo "ERROR: PSP libc does not export stpcpy; GCC may synthesize unresolved calls." >&2
+    exit 1
+fi
+
 ## Store build information.
 pspdev_record_build_info "gcc" "$(git -C "${SOURCE}" log -1 --format="gcc %H %cs %s")"
