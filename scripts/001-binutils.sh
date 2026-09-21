@@ -38,7 +38,9 @@ fi
 ## Determine the maximum number of processes that Make can work with.
 PROC_NR=$(getconf _NPROCESSORS_ONLN)
 
-## Create and enter the toolchain/build directory
+## Generated configure state is not safe to reuse across source, toolchain,
+## dependency, or configure-option changes. Always configure from a clean tree.
+rm -rf "${BUILD}"
 mkdir -p "${BUILD}"
 cd "${BUILD}"
 

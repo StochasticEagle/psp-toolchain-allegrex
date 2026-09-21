@@ -39,7 +39,9 @@ if [ "$(uname -s)" = "Darwin" ]; then
   fi
 fi
 
-## Create and enter the stage 1 build directory.
+## Generated configure state is not safe to reuse across source, toolchain,
+## dependency, or configure-option changes. Always configure from a clean tree.
+rm -rf "${BUILD}"
 mkdir -p "${BUILD}"
 cd "${BUILD}"
 
