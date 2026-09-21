@@ -25,10 +25,8 @@ TARG_XTRA_OPTS="${TARG_XTRA_OPTS:-}"
 ## Determine the maximum number of processes that Make can work with.
 PROC_NR=$(getconf _NPROCESSORS_ONLN)
 
-## Newlib's generated build/install rules depend on the selected sysdir header
-## layout. Reconfigure from a clean tree so newly added or moved PSP headers
-## cannot be hidden by stale generated makefiles.
-rm -rf "${BUILD}"
+## Reuse the build tree. Re-running configure refreshes the PSP sysdir
+## install rules without discarding already-built objects.
 mkdir -p "${BUILD}"
 cd "${BUILD}"
 
