@@ -101,7 +101,7 @@ if [ ! -f "${LIBC_ARCHIVE}" ]; then
     echo "ERROR: PSP libc archive is missing: ${LIBC_ARCHIVE}" >&2
     exit 1
 fi
-if ! "${PSPDEV}/bin/psp-nm" -g --defined-only "${LIBC_ARCHIVE}" | grep -Eq ' [Tt] stpcpy
+if ! "${PSPDEV}/bin/psp-nm" -g --defined-only "${LIBC_ARCHIVE}" | grep -Eq ' [Tt] stpcpy$'; then
     echo "ERROR: PSP libc does not export stpcpy; GCC may synthesize unresolved calls." >&2
     exit 1
 fi
