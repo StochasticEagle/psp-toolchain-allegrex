@@ -25,7 +25,10 @@ TARG_XTRA_OPTS="${TARG_XTRA_OPTS:-}"
 ## Determine the maximum number of processes that Make can work with.
 PROC_NR=$(getconf _NPROCESSORS_ONLN)
 
-## Create and enter the toolchain/build directory
+## Newlib's generated build/install rules depend on the selected sysdir header
+## layout. Reconfigure from a clean tree so newly added or moved PSP headers
+## cannot be hidden by stale generated makefiles.
+rm -rf "${BUILD}"
 mkdir -p "${BUILD}"
 cd "${BUILD}"
 
@@ -44,6 +47,28 @@ cd "${BUILD}"
 ## Compile and install.
 make --quiet -j "$PROC_NR" all
 pspdev_run_install make --quiet -j "$PROC_NR" install-strip
+
+## Verify that the PSP sysroot contains the network compatibility surface
+## required by PSPSDK and package builds.
+for header in \
+    "${PSPDEV}/psp/include/netdb.h" \
+    "${PSPDEV}/psp/include/arpa/inet.h" \
+    "${PSPDEV}/psp/include/netinet/in.h" \
+    "${PSPDEV}/psp/include/netinet/tcp.h"; do
+    if [ ! -f "${header}" ]; then
+        echo "ERROR: newlib did not install required PSP header: ${header}" >&2
+        exit 1
+    fi
+done
+
+grep -q 'struct addrinfo' "${PSPDEV}/psp/include/netdb.h" || {
+    echo "ERROR: installed PSP netdb.h lacks struct addrinfo." >&2
+    exit 1
+}
+grep -q 'getaddrinfo' "${PSPDEV}/psp/include/netdb.h" || {
+    echo "ERROR: installed PSP netdb.h lacks getaddrinfo()." >&2
+    exit 1
+}
 
 ## Copy license file.
 pspdev_run_install mkdir -p "${PSPDEV}/psp/share/licenses/newlib"
