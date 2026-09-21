@@ -108,10 +108,3 @@ fi
 
 ## Store build information.
 pspdev_record_build_info "gcc" "$(git -C "${SOURCE}" log -1 --format="gcc %H %cs %s")"
-; then
-    echo "ERROR: PSP libc does not export stpcpy; GCC may synthesize unresolved calls." >&2
-    exit 1
-fi
-
-## Store build information.
-pspdev_record_build_info "gcc" "$(git -C "${SOURCE}" log -1 --format="gcc %H %cs %s")"
