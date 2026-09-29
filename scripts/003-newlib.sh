@@ -8,7 +8,7 @@ onerr()
 }
 trap onerr ERR
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 source "${ROOT}/install-permissions.sh"
 SOURCE="${ROOT}/components/newlib"
 BUILD="${ROOT}/build/newlib"
@@ -25,9 +25,15 @@ TARG_XTRA_OPTS="${TARG_XTRA_OPTS:-}"
 ## Determine the maximum number of processes that Make can work with.
 PROC_NR=$(getconf _NPROCESSORS_ONLN)
 
-## Reuse the build tree. Re-running configure refreshes the PSP sysdir
-## install rules without discarding already-built objects.
-mkdir -p "${BUILD}"
+## Reuse the build tree only while its configure-defining inputs still match.
+pspdev_prepare_build_tree "newlib" "${BUILD}" "${SOURCE}" \
+    "schema=1" \
+    "source=${SOURCE}" \
+    "build=${BUILD}" \
+    "prefix=${PSPDEV}" \
+    "target=${TARGET}" \
+    "extra-options=${TARG_XTRA_OPTS}" \
+    "configure=--with-sysroot=${PSPDEV}/${TARGET} --enable-newlib-retargetable-locking --enable-newlib-multithread --enable-newlib-io-c99-formats --enable-newlib-iconv --enable-newlib-iconv-encodings=us_ascii,utf8,utf16,utf_16be,utf_16le,ucs_2,ucs_2be,ucs_2le,ucs_2_internal,ucs_4_internal,iso_8859_1"
 cd "${BUILD}"
 
 ## Configure the build.
@@ -41,6 +47,7 @@ cd "${BUILD}"
     --enable-newlib-iconv \
     --enable-newlib-iconv-encodings=us_ascii,utf8,utf16,utf_16be,utf_16le,ucs_2,ucs_2be,ucs_2le,ucs_2_internal,ucs_4_internal,iso_8859_1 \
     $TARG_XTRA_OPTS
+pspdev_commit_build_tree "${BUILD}"
 
 ## Compile and install.
 make --quiet -j "$PROC_NR" all

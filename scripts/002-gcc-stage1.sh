@@ -8,7 +8,7 @@ onerr()
 }
 trap onerr ERR
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 source "${ROOT}/install-permissions.sh"
 SOURCE="${ROOT}/components/gcc"
 BUILD="${ROOT}/build/gcc-stage1"
@@ -39,9 +39,15 @@ if [ "$(uname -s)" = "Darwin" ]; then
   fi
 fi
 
-## Reuse the build tree. Re-running configure refreshes generated state while
-## make preserves and reuses objects whose inputs have not changed.
-mkdir -p "${BUILD}"
+## Reuse the build tree only while its configure-defining inputs still match.
+pspdev_prepare_build_tree "gcc-stage1" "${BUILD}" "${SOURCE}" \
+    "schema=1" \
+    "source=${SOURCE}" \
+    "build=${BUILD}" \
+    "prefix=${PSPDEV}" \
+    "target=${TARGET}" \
+    "extra-options=${TARG_XTRA_OPTS}" \
+    "configure=--enable-languages=c --with-float=hard --with-headers=no --without-newlib --disable-libgcc --disable-shared --disable-threads --disable-libssp --disable-libgomp --disable-libmudflap --disable-libquadmath --disable-nls"
 cd "${BUILD}"
 
 ## Configure the bootstrap compiler.
@@ -62,6 +68,7 @@ cd "${BUILD}"
   --disable-libquadmath \
   --disable-nls \
   $TARG_XTRA_OPTS
+pspdev_commit_build_tree "${BUILD}"
 
 ## Compile and install the bootstrap compiler.
 make --quiet -j "$PROC_NR" all-gcc

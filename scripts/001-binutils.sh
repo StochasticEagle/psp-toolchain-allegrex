@@ -8,7 +8,7 @@ onerr()
 }
 trap onerr ERR
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 source "${ROOT}/install-permissions.sh"
 SOURCE="${ROOT}/components/binutils-gdb"
 BUILD="${ROOT}/build/binutils"
@@ -38,14 +38,21 @@ fi
 ## Determine the maximum number of processes that Make can work with.
 PROC_NR=$(getconf _NPROCESSORS_ONLN)
 
-## Reuse the build tree. Re-running configure refreshes generated state while
-## make preserves and reuses objects whose inputs have not changed.
-mkdir -p "${BUILD}"
-cd "${BUILD}"
-
 ## Build GDB without python support by default
 ## Set the environment variable WITH_PYTHON to auto to change this
 WITH_PYTHON="${WITH_PYTHON:-no}"
+
+## Reuse the build tree only while its configure-defining inputs still match.
+pspdev_prepare_build_tree "binutils" "${BUILD}" "${SOURCE}" \
+    "schema=1" \
+    "source=${SOURCE}" \
+    "build=${BUILD}" \
+    "prefix=${PSPDEV}" \
+    "target=${TARGET}" \
+    "with-python=${WITH_PYTHON}" \
+    "extra-options=${TARG_XTRA_OPTS}" \
+    "configure=--with-sysroot=${PSPDEV}/${TARGET} --enable-plugins --disable-initfini-array --disable-werror"
+cd "${BUILD}"
 
 ## Configure the build.
 "${SOURCE}/configure" \
@@ -58,6 +65,7 @@ WITH_PYTHON="${WITH_PYTHON:-no}"
     --with-python="$WITH_PYTHON" \
     --disable-werror \
     $TARG_XTRA_OPTS
+pspdev_commit_build_tree "${BUILD}"
 
 ## Compile and install.
 make --quiet -j "$PROC_NR" all

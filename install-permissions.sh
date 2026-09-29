@@ -57,6 +57,77 @@ pspdev_run_install() {
     fi
 }
 
+
+pspdev_build_tree_has_stale_paths() {
+    local build="$1"
+    local source="$2"
+    local file line path
+
+    [[ -d "${build}" ]] || return 1
+
+    while IFS= read -r -d '' file; do
+        while IFS= read -r line; do
+            if [[ "${line}" =~ ^(srcdir|top_srcdir|abs_srcdir|abs_top_srcdir)[[:space:]]*=[[:space:]]*(.*)$ ]]; then
+                path="${BASH_REMATCH[2]}"
+                if [[ "${path}" == "~/"* || ( "${path}" == /* && "${path}" != "${source}" && "${path}" != "${source}/"* ) ]]; then
+                    return 0
+                fi
+            elif [[ "${line}" =~ ^(builddir|top_builddir|abs_builddir|abs_top_builddir)[[:space:]]*=[[:space:]]*(.*)$ ]]; then
+                path="${BASH_REMATCH[2]}"
+                if [[ "${path}" == "~/"* || ( "${path}" == /* && "${path}" != "${build}" && "${path}" != "${build}/"* ) ]]; then
+                    return 0
+                fi
+            fi
+        done < "${file}"
+    done < <(find "${build}" -type f -name Makefile -print0)
+
+    return 1
+}
+
+pspdev_prepare_build_tree() {
+    local stage="$1"
+    local build="$2"
+    local source="$3"
+    shift 3
+
+    local marker="${build}/.pspdev-build-state"
+    local pending="${marker}.pending"
+    local expected reset_reason=""
+
+    expected="$(printf '%s\n' "$@")"
+
+    if [[ -d "${build}" ]]; then
+        if [[ -f "${marker}" ]]; then
+            if [[ "$(cat "${marker}")" != "${expected}" ]]; then
+                reset_reason="configuration changed"
+            fi
+        elif pspdev_build_tree_has_stale_paths "${build}" "${source}"; then
+            reset_reason="relocated generated paths detected"
+        fi
+    fi
+
+    if [[ -n "${reset_reason}" ]]; then
+        echo "Refreshing ${stage} build tree: ${reset_reason}."
+        rm -rf "${build}"
+    fi
+
+    mkdir -p "${build}"
+    printf '%s\n' "$@" > "${pending}"
+}
+
+pspdev_commit_build_tree() {
+    local build="$1"
+    local marker="${build}/.pspdev-build-state"
+    local pending="${marker}.pending"
+
+    [[ -f "${pending}" ]] || {
+        echo "ERROR: Missing pending build-state marker: ${pending}" >&2
+        return 1
+    }
+
+    mv -f "${pending}" "${marker}"
+}
+
 pspdev_record_build_info() {
     local key="$1"
     local line="$2"
