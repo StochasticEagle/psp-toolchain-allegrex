@@ -61,9 +61,20 @@ pspdev_run_install() {
 pspdev_build_tree_has_stale_paths() {
     local build="$1"
     local source="$2"
-    local file line path
+    local file line path cache_source cache_build
 
     [[ -d "${build}" ]] || return 1
+
+    if [[ -f "${build}/CMakeCache.txt" ]]; then
+        cache_source="$(sed -n 's/^CMAKE_HOME_DIRECTORY:INTERNAL=//p' "${build}/CMakeCache.txt" | tail -n 1)"
+        cache_build="$(sed -n 's/^CMAKE_CACHEFILE_DIR:INTERNAL=//p' "${build}/CMakeCache.txt" | tail -n 1)"
+        if [[ -n "${cache_source}" && "${cache_source}" != "${source}" ]]; then
+            return 0
+        fi
+        if [[ -n "${cache_build}" && "${cache_build}" != "${build}" ]]; then
+            return 0
+        fi
+    fi
 
     while IFS= read -r -d '' file; do
         while IFS= read -r line; do
